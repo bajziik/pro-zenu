@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>pro moji ženu</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: linear-gradient(to bottom, #0d0d2b, #1a1a3d);
+            overflow: hidden;
+            position: relative;
+        }
+
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+
+        h1 {
+            position: relative;
+            color: #ff3366;
+            font-size: 4rem;
+            font-family: 'Comic Sans MS', cursive, sans-serif;
+            text-shadow: 0 0 15px #ff3366, 0 0 30px #ff6699;
+            z-index: 10;
+            margin-bottom: 20px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.05);
+            }
+        }
+
+        .button-container {
+            position: relative;
+            z-index: 10;
+            display: flex;
+            gap: 10px;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 1rem;
+            color: white;
+            background: #ff3366;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            box-shadow: 0 0 10px #ff3366, 0 0 20px #ff6699;
+            transition: background 0.3s ease, transform 0.2s ease;
+        }
+
+        button:hover {
+            background: #ff6699;
+            transform: scale(1.1);
+        }
+    </style>
+</head>
+<body>
+    <h1 id="dynamicText">Miluju tě</h1>
+    <div class="button-container">
+        <button id="addHearts">Přidat srdíčka</button>
+        <button id="clearHearts">Smazat srdíčka</button>
+        <button id="changeBackground">Změnit pozadí</button>
+    </div>
+    <canvas id="heartCanvas"></canvas>
+    <audio id="clickSound" src="https://www.soundjay.com/button/button-3.mp3" preload="auto"></audio>
+    <script>
+        const canvas = document.getElementById("heartCanvas");
+        const ctx = canvas.getContext("2d");
+        const clickSound = document.getElementById("clickSound");
+        const dynamicText = document.getElementById("dynamicText");
+
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        let hearts = [];
+        let messages = ["Miluju tě", "Jsi moje všechno", "Navždy spolu", "jsi muj šmudla", "224"];
+        let messageIndex = 0;
+
+        class Heart {
+            constructor(x, y, size) {
+                this.x = x;
+                this.y = y;
+                this.size = size;
+                this.alpha = 1;
+                this.hue = Math.random() * 360;
+                this.growth = Math.random() * 0.02 + 0.01;
+                this.pulse = 0;
+            }
+
+            draw() {
+                ctx.beginPath();
+                for (let t = 0; t <= Math.PI * 2; t += 0.01) {
+                    const xPos = this.size * 16 * Math.sin(t) ** 3;
+                    const yPos = -this.size * (13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t));
+                    ctx.lineTo(this.x + xPos, this.y + yPos);
+                }
+                ctx.closePath();
+                ctx.strokeStyle = `hsla(${this.hue}, 70%, 50%, ${this.alpha})`;
+                ctx.stroke();
+            }
+
+            update() {
+                this.pulse += 0.02;
+                this.size += Math.sin(this.pulse) * 0.2;
+            }
+        }
+
+        function createHearts() {
+            for (let i = 0; i < 10; i++) {
+                const x = Math.random() * canvas.width;
+                const y = Math.random() * canvas.height;
+                const size = Math.random() * 5 + 3;
+                hearts.push(new Heart(x, y, size));
+            }
+        }
+
+        function clearHearts() {
+            hearts = [];
+        }
+
+        function changeBackground() {
+            const colors = [
+                "linear-gradient(to bottom, #0d0d2b, #1a1a3d)",
+                "linear-gradient(to bottom, #1a1a3d, #29294d)",
+                "linear-gradient(to bottom, #29294d, #3d3d5c)",
+                "linear-gradient(to bottom, #3d3d5c, #4a4a6d)"
+            ];
+            const randomColor = colors[Math.floor(Math.random() * colors.length)];
+            document.body.style.background = randomColor;
+        }
+
+        function changeText() {
+            messageIndex = (messageIndex + 1) % messages.length;
+            dynamicText.textContent = messages[messageIndex];
+        }
+
+        function playSound() {
+            clickSound.currentTime = 0;
+            clickSound.play();
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            hearts.forEach((heart) => {
+                heart.draw();
+                heart.update();
+            });
+
+            requestAnimationFrame(animate);
+        }
+
+        document.getElementById("addHearts").addEventListener("click", () => {
+            createHearts();
+            playSound();
+        });
+
+        document.getElementById("clearHearts").addEventListener("click", () => {
+            clearHearts();
+            playSound();
+        });
+
+        document.getElementById("changeBackground").addEventListener("click", () => {
+            changeBackground();
+            playSound();
+        });
+
+        setInterval(changeText, 2000);
+
+        createHearts();
+        animate();
+    </script>
+</body>
+</html>
