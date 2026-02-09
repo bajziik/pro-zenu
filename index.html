@@ -1,0 +1,291 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Pro Domču ❤️</title>
+
+<style>
+  body{
+    margin:0;
+    background:#0b0b14;
+    color:white;
+    font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;
+    overflow-x:hidden;
+  }
+
+  .wrap{
+    min-height:100dvh;            /* mobil-friendly viewport */
+    display:grid;
+    place-items:center;
+    padding:16px;                 /* aby to na mobilu nedřelo o kraje */
+  }
+
+  .card{
+    width:min(600px, 100%);
+    background:#11111c;
+    padding:18px;
+    border-radius:18px;
+    box-shadow:0 0 40px rgba(255,77,141,.2);
+  }
+
+  h1{margin:0 0 10px}
+
+  .photo{
+    width:100%;
+    height:auto;
+    border-radius:14px;
+    margin:10px 0;
+    box-shadow:0 0 30px rgba(255,77,141,.25);
+    display:block;
+  }
+
+  .block{
+    background:#181824;
+    padding:12px;
+    border-radius:12px;
+    margin:10px 0;
+    line-height:1.55;
+  }
+
+  button{
+    padding:12px 16px;
+    border:0;
+    border-radius:999px;
+    background:linear-gradient(135deg,#ff4d8d,#ff8fb1);
+    color:black;
+    font-weight:700;
+    cursor:pointer;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+
+  /* LOCK + MODAL */
+  .modal{
+    position:fixed;
+    inset:0;
+    background:#000a;
+    display:grid;
+    place-items:center;
+    padding:16px;
+  }
+
+  input{
+    width:100%;
+    padding:12px 12px;
+    background:black;
+    border:1px solid #fff3;
+    color:white;
+    border-radius:10px;
+    margin:8px 0 12px;
+    font-size:16px; /* zabrání zoomu iOS při focusu */
+    text-align:center;
+  }
+
+  /* otázka – ať se NE hýbe v rámci karty */
+  .questionArea{
+    position:relative;
+    height:86px;        /* prostor pro utíkání */
+    margin-top:10px;
+  }
+
+  .btnRow{
+    position:absolute;
+    left:50%;
+    top:50%;
+    transform:translate(-50%,-50%);
+    display:flex;
+    gap:10px;
+    justify-content:center;
+    align-items:center;
+    width:100%;
+  }
+
+  #ne{
+    position:relative;
+    transition: transform .12s ease;
+    background: rgba(255,255,255,.12);
+    color: white;
+    border: 1px solid rgba(255,255,255,.18);
+  }
+
+  @media (max-width:420px){
+    .card{ padding:16px; }
+    button{ width:100%; }
+    .btnRow{ flex-direction:column; gap:10px; }
+    .questionArea{ height:120px; }
+  }
+</style>
+</head>
+
+<body>
+
+<!-- ZAMČENO -->
+<div class="modal" id="lock">
+  <div class="card">
+    <h2>Vstup jen pro Domču ❤️</h2>
+    <p>Zadej naše datum (DD.MM.RRRR)</p>
+
+    <input id="code" placeholder="24.7.2024" inputmode="numeric" autocomplete="off">
+    <button id="unlockBtn">Odemknout</button>
+
+    <p id="err" style="color:#ff8fb1; margin:10px 0 0;"></p>
+  </div>
+</div>
+
+<!-- HLAVNÍ OBSAH -->
+<div class="wrap" id="main" style="display:none">
+  <div class="card">
+
+    <h1>Ahoj Domčo ❤️</h1>
+
+    <!-- VAŠE FOTKA -->
+    <img src="foto.jpg" class="photo" alt="My dva">
+
+    <div class="block">
+      Tohle jsme my.<br>
+      A přesně kvůli tobě jsem tuhle stránku dělal.
+    </div>
+
+    <div id="text" class="block" style="min-height:92px;"></div>
+
+    <button id="nextBtn">Pokračovat</button>
+
+  </div>
+</div>
+
+<script>
+  const heslo = "24.7.2024";
+
+  const elLock = document.getElementById("lock");
+  const elMain = document.getElementById("main");
+  const elCode = document.getElementById("code");
+  const elErr  = document.getElementById("err");
+  const elText = document.getElementById("text");
+  const elNext = document.getElementById("nextBtn");
+  const elUnlock = document.getElementById("unlockBtn");
+
+  // odemčení (klik i enter)
+  function check(){
+    const val = (elCode.value || "").trim();
+    if(val === heslo){
+      elLock.style.display = "none";
+      elMain.style.display = "grid";
+      start();
+    } else {
+      elErr.textContent = "To není naše datum 😄";
+    }
+  }
+  elUnlock.addEventListener("click", check);
+  elCode.addEventListener("keydown", (e) => {
+    if(e.key === "Enter") check();
+  });
+
+  const zpravy = [
+`Lásko,
+
+neumím psát básně
+a nejsem dokonale romantickej,
+ale kvůli tobě se snažím.`,
+
+`Mám tě rád za tvůj smích,
+za to jak se ke mně tulíš,
+za to, že mě zvládáš,
+i když jsem občas kretén.`,
+
+`A proto se chci zeptat
+na jednu jedinou věc…`
+  ];
+
+  let i = 0;
+
+  async function pis(t){
+    elText.textContent = "";
+    for(const ch of t){
+      elText.textContent += ch;
+      await new Promise(r => setTimeout(r, 28));
+    }
+  }
+
+  async function start(){
+    i = 0;
+    await pis(zpravy[0]);
+  }
+
+  elNext.addEventListener("click", async () => {
+    i++;
+    if(i < zpravy.length){
+      await pis(zpravy[i]);
+    } else {
+      otazka();
+    }
+  });
+
+  // ===== otázka + utíkající NE (desktop i mobil) =====
+  function otazka(){
+    document.body.insertAdjacentHTML("beforeend", `
+      <div class="modal" id="qModal">
+        <div class="card" id="qCard">
+          <h2>Tak se ptám…</h2>
+          <h3>Budeš moje Valentýnka? ❤️</h3>
+
+          <div class="questionArea" id="qa">
+            <div class="btnRow" id="btnRow">
+              <button id="yesBtn">ANO</button>
+              <button id="ne">Ne</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    `);
+
+    const yesBtn = document.getElementById("yesBtn");
+    const noBtn  = document.getElementById("ne");
+    const qa     = document.getElementById("qa");
+    const row    = document.getElementById("btnRow");
+
+    function utec(){
+      // hýbej v rámci questionArea (ať to neutíká mimo)
+      const qaRect = qa.getBoundingClientRect();
+      const rowRect = row.getBoundingClientRect();
+
+      const maxX = (qaRect.width - rowRect.width) / 2;
+      const maxY = (qaRect.height - rowRect.height) / 2;
+
+      const x = (Math.random()*2 - 1) * Math.max(0, maxX);
+      const y = (Math.random()*2 - 1) * Math.max(0, maxY);
+
+      row.style.transform = `translate(calc(-50% + ${x}px), calc(-50% + ${y}px))`;
+    }
+
+    // desktop (hover) + mobil (dotyk)
+    noBtn.addEventListener("pointerenter", utec);
+    noBtn.addEventListener("pointerdown", (e) => { e.preventDefault(); utec(); });
+
+    yesBtn.addEventListener("click", ano);
+  }
+
+  function ano(){
+    document.body.innerHTML = `
+      <div class="wrap">
+        <div class="card">
+          <h1> MRDIČKA ❤️</h1>
+
+          <p style="line-height:1.6">
+            Tak teď už je to jistý.<br>
+            pusu máš povinnou<br>
+            a jsi ofiko moje Valentýnka 😄
+          </p>
+
+          <p style="line-height:1.6">
+            Miluju tě.<br>
+            Tvůj Mimoušek ❤️
+          </p>
+        </div>
+      </div>
+    `;
+  }
+</script>
+
+</body>
+</html>
