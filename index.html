@@ -15,10 +15,10 @@
   }
 
   .wrap{
-    min-height:100dvh;            /* mobil-friendly viewport */
+    min-height:100dvh;
     display:grid;
     place-items:center;
-    padding:16px;                 /* aby to na mobilu nedřelo o kraje */
+    padding:16px;
   }
 
   .card{
@@ -30,6 +30,7 @@
   }
 
   h1{margin:0 0 10px}
+  h2{margin:0 0 8px}
 
   .photo{
     width:100%;
@@ -46,6 +47,7 @@
     border-radius:12px;
     margin:10px 0;
     line-height:1.55;
+    white-space:pre-wrap;
   }
 
   button{
@@ -54,39 +56,66 @@
     border-radius:999px;
     background:linear-gradient(135deg,#ff4d8d,#ff8fb1);
     color:black;
-    font-weight:700;
+    font-weight:800;
     cursor:pointer;
+    width:100%;
     -webkit-tap-highlight-color: transparent;
     touch-action: manipulation;
   }
 
-  /* LOCK + MODAL */
+  /* LOCK / MODAL (mobile-proof center + safe-area) */
   .modal{
     position:fixed;
     inset:0;
     background:#000a;
-    display:grid;
-    place-items:center;
-    padding:16px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding: calc(16px + env(safe-area-inset-top)) 16px calc(16px + env(safe-area-inset-bottom));
+    min-height:100dvh;
+    z-index: 10;
+  }
+  @supports (-webkit-touch-callout: none) {
+    .modal { min-height: -webkit-fill-available; }
   }
 
   input{
     width:100%;
     padding:12px 12px;
     background:black;
-    border:1px solid #fff3;
+    border:1px solid rgba(255,255,255,.18);
     color:white;
-    border-radius:10px;
-    margin:8px 0 12px;
-    font-size:16px; /* zabrání zoomu iOS při focusu */
+    border-radius:12px;
+    font-size:18px;
     text-align:center;
+    outline:none;
+    letter-spacing: 4px;
+  }
+
+  .hint{
+    color: rgba(255,255,255,.72);
+    margin:0 0 10px;
+    line-height:1.45;
+  }
+
+  .err{
+    color:#ff8fb1;
+    margin:10px 0 0;
+    min-height: 22px;
+  }
+
+  .smallHint{
+    color: rgba(255,255,255,.65);
+    margin:10px 0 0;
+    font-size:13.5px;
+    line-height:1.45;
   }
 
   /* otázka – ať se NE hýbe v rámci karty */
   .questionArea{
     position:relative;
-    height:86px;        /* prostor pro utíkání */
-    margin-top:10px;
+    height:120px;
+    margin-top:6px;
   }
 
   .btnRow{
@@ -95,92 +124,152 @@
     top:50%;
     transform:translate(-50%,-50%);
     display:flex;
+    flex-direction:column;
     gap:10px;
-    justify-content:center;
-    align-items:center;
     width:100%;
+    max-width:320px;
   }
 
   #ne{
-    position:relative;
-    transition: transform .12s ease;
-    background: rgba(255,255,255,.12);
-    color: white;
-    border: 1px solid rgba(255,255,255,.18);
+    background:rgba(255,255,255,.12);
+    color:white;
+    border:1px solid rgba(255,255,255,.18);
   }
 
-  @media (max-width:420px){
-    .card{ padding:16px; }
-    button{ width:100%; }
-    .btnRow{ flex-direction:column; gap:10px; }
-    .questionArea{ height:120px; }
+  /* confetti overlay */
+  #confetti{
+    position:fixed;
+    inset:0;
+    width:100%;
+    height:100%;
+    pointer-events:none;
+    z-index: 999;
+    display:none;
+  }
+
+  /* finale card */
+  #finale{ display:none; }
+  .pop{ animation: pop .22s ease; }
+  @keyframes pop{
+    from{ transform: scale(.96); opacity:.8; }
+    to{ transform: scale(1); opacity:1; }
   }
 </style>
 </head>
 
 <body>
 
+<canvas id="confetti"></canvas>
+
 <!-- ZAMČENO -->
 <div class="modal" id="lock">
   <div class="card">
     <h2>Vstup jen pro Domču ❤️</h2>
-    <p>Zadej naše datum (DD.MM.RRRR)</p>
+    
 
-    <input id="code" placeholder="24.7.2024" inputmode="numeric" autocomplete="off">
+    <input id="code"
+           inputmode="numeric"
+           maxlength="6"
+           autocomplete="off">
+
     <button id="unlockBtn">Odemknout</button>
 
-    <p id="err" style="color:#ff8fb1; margin:10px 0 0;"></p>
+    <div class="err" id="err"></div>
+    <div class="smallHint" id="help" style="display:none;">
+      Nápověda: den kdy jsme začali ❤️
+    </div>
   </div>
 </div>
 
 <!-- HLAVNÍ OBSAH -->
 <div class="wrap" id="main" style="display:none">
-  <div class="card">
-
+  <div class="card" id="mainCard">
     <h1>Ahoj Domčo ❤️</h1>
 
-    <!-- VAŠE FOTKA -->
     <img src="foto.jpg" class="photo" alt="My dva">
 
     <div class="block">
-      Tohle jsme my.<br>
-      A přesně kvůli tobě jsem tuhle stránku dělal.
+Tohle jsme my.
+A přesně kvůli tobě jsem tuhle stránku dělal.
     </div>
 
     <div id="text" class="block" style="min-height:92px;"></div>
-
     <button id="nextBtn">Pokračovat</button>
+  </div>
+</div>
 
+<!-- FINALE (nepřepisujeme body, jen přepneme view) -->
+<div class="wrap" id="finale">
+  <div class="card pop">
+    <h1> MRDIČKA ❤️</h1>
+
+    <p style="line-height:1.6">
+      Tak teď už je to jistý.<br>
+      pusu máš povinnou<br>
+      a jsi ofiko moje Valentýnka 😄
+    </p>
+
+    <p style="line-height:1.6">
+      Miluju tě.<br>
+      Tvůj Mimoušek ❤️
+    </p>
   </div>
 </div>
 
 <script>
-  const heslo = "24.7.2024";
+  // ===== HESLO =====
+  const heslo = "240724";
+  let tries = 0;
 
+  // DOM
   const elLock = document.getElementById("lock");
   const elMain = document.getElementById("main");
-  const elCode = document.getElementById("code");
+  const elFinale = document.getElementById("finale");
+
   const elErr  = document.getElementById("err");
-  const elText = document.getElementById("text");
-  const elNext = document.getElementById("nextBtn");
+  const elHelp = document.getElementById("help");
+  const elCode = document.getElementById("code");
   const elUnlock = document.getElementById("unlockBtn");
 
-  // odemčení (klik i enter)
-  function check(){
-    const val = (elCode.value || "").trim();
-    if(val === heslo){
-      elLock.style.display = "none";
-      elMain.style.display = "grid";
-      start();
-    } else {
-      elErr.textContent = "To není naše datum 😄";
-    }
-  }
-  elUnlock.addEventListener("click", check);
+  const elText = document.getElementById("text");
+  const elNext = document.getElementById("nextBtn");
+
+  // jen čísla + max 6
+  elCode.addEventListener("input", () => {
+    elCode.value = (elCode.value || "").replace(/\D/g, "").slice(0,6);
+  });
+
+  // Enter odemkne
   elCode.addEventListener("keydown", (e) => {
     if(e.key === "Enter") check();
   });
 
+  function vibe(ms=40){
+    if(navigator.vibrate) navigator.vibrate(ms);
+  }
+
+  function check(){
+    const val = (elCode.value || "").replace(/\D/g, "").trim();
+
+    if(val === heslo){
+      elLock.style.display = "none";
+      elMain.style.display = "grid";
+      start();
+      return;
+    }
+
+    tries++;
+    vibe(35);
+    elErr.textContent = "To není naše datum 😄";
+
+    if(tries >= 3){
+      elHelp.style.display = "block";
+    }
+  }
+
+  elUnlock.addEventListener("click", check);
+
+  // ===== TEXTY =====
   const zpravy = [
 `Lásko,
 
@@ -221,11 +310,11 @@ na jednu jedinou věc…`
     }
   });
 
-  // ===== otázka + utíkající NE (desktop i mobil) =====
+  // ===== OTÁZKA + UTÍKAJÍCÍ NE =====
   function otazka(){
     document.body.insertAdjacentHTML("beforeend", `
       <div class="modal" id="qModal">
-        <div class="card" id="qCard">
+        <div class="card">
           <h2>Tak se ptám…</h2>
           <h3>Budeš moje Valentýnka? ❤️</h3>
 
@@ -245,45 +334,132 @@ na jednu jedinou věc…`
     const row    = document.getElementById("btnRow");
 
     function utec(){
-      // hýbej v rámci questionArea (ať to neutíká mimo)
-      const qaRect = qa.getBoundingClientRect();
+      const qaRect  = qa.getBoundingClientRect();
       const rowRect = row.getBoundingClientRect();
+      const maxX = Math.max(0, (qaRect.width - rowRect.width) / 2);
+      const maxY = Math.max(0, (qaRect.height - rowRect.height) / 2);
 
-      const maxX = (qaRect.width - rowRect.width) / 2;
-      const maxY = (qaRect.height - rowRect.height) / 2;
-
-      const x = (Math.random()*2 - 1) * Math.max(0, maxX);
-      const y = (Math.random()*2 - 1) * Math.max(0, maxY);
+      const x = (Math.random()*2 - 1) * maxX;
+      const y = (Math.random()*2 - 1) * maxY;
 
       row.style.transform = `translate(calc(-50% + ${x}px), calc(-50% + ${y}px))`;
+      vibe(12);
     }
 
-    // desktop (hover) + mobil (dotyk)
     noBtn.addEventListener("pointerenter", utec);
     noBtn.addEventListener("pointerdown", (e) => { e.preventDefault(); utec(); });
+    noBtn.addEventListener("click", (e) => { e.preventDefault(); utec(); });
 
-    yesBtn.addEventListener("click", ano);
+    yesBtn.addEventListener("click", () => {
+      const qm = document.getElementById("qModal");
+      if(qm) qm.remove();
+      ano();
+    });
+  }
+
+  // ===== CONFETTI (mix papírky + srdíčka) =====
+  const conf = document.getElementById("confetti");
+  const ctx = conf.getContext("2d");
+  let bits = [], raf = 0, stopAt = 0;
+
+  function resizeConf(){
+    const dpr = window.devicePixelRatio || 1;
+    conf.width  = Math.floor(window.innerWidth * dpr);
+    conf.height = Math.floor(window.innerHeight * dpr);
+    conf.style.width = window.innerWidth + "px";
+    conf.style.height = window.innerHeight + "px";
+    ctx.setTransform(1,0,0,1,0,0);
+    ctx.scale(dpr, dpr);
+  }
+  window.addEventListener("resize", resizeConf);
+  resizeConf();
+
+  function rand(min,max){ return Math.random()*(max-min)+min; }
+
+  function spawn(count=220){
+    bits = [];
+    const w = window.innerWidth, h = window.innerHeight;
+    for(let i=0;i<count;i++){
+      bits.push({
+        x: rand(0,w),
+        y: rand(-h*0.2, -20),
+        vx: rand(-2.6,2.6),
+        vy: rand(2.2,5.2),
+        r: rand(3,6),
+        rot: rand(0, Math.PI*2),
+        vr: rand(-0.18,0.18),
+        life: rand(90, 160),
+        shape: Math.random() < 0.38 ? "heart" : "rect",
+        a: rand(0.75, 1)
+      });
+    }
+  }
+
+  function drawHeart(x,y,s){
+    ctx.beginPath();
+    ctx.moveTo(x, y + s*0.3);
+    ctx.bezierCurveTo(x, y, x - s*0.5, y, x - s*0.5, y + s*0.3);
+    ctx.bezierCurveTo(x - s*0.5, y + s*0.55, x, y + s*0.75, x, y + s);
+    ctx.bezierCurveTo(x, y + s*0.75, x + s*0.5, y + s*0.55, x + s*0.5, y + s*0.3);
+    ctx.bezierCurveTo(x + s*0.5, y, x, y, x, y + s*0.3);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  function loop(){
+    const w = window.innerWidth, h = window.innerHeight;
+    ctx.clearRect(0,0,w,h);
+
+    for(const b of bits){
+      b.x += b.vx;
+      b.y += b.vy;
+      b.vy += 0.03;
+      b.rot += b.vr;
+      b.life -= 1;
+
+      ctx.save();
+      ctx.globalAlpha = b.a;
+      const hue = 330 + (b.x % 22);
+      ctx.fillStyle = `hsla(${hue}, 92%, 70%, 0.95)`;
+
+      if(b.shape === "rect"){
+        ctx.translate(b.x, b.y);
+        ctx.rotate(b.rot);
+        ctx.fillRect(-b.r, -b.r, b.r*2, b.r*2);
+      } else {
+        drawHeart(b.x, b.y, b.r*2);
+      }
+      ctx.restore();
+    }
+
+    bits = bits.filter(b => b.life > 0 && b.y < h + 60);
+
+    if(Date.now() < stopAt && bits.length){
+      raf = requestAnimationFrame(loop);
+    } else {
+      cancelAnimationFrame(raf);
+      ctx.clearRect(0,0,w,h);
+      conf.style.display = "none";
+      bits = [];
+    }
+  }
+
+  function launchConfetti(ms=4200){
+    resizeConf();
+    conf.style.display = "block";
+    spawn(240);
+    stopAt = Date.now() + ms;
+    cancelAnimationFrame(raf);
+    raf = requestAnimationFrame(loop);
   }
 
   function ano(){
-    document.body.innerHTML = `
-      <div class="wrap">
-        <div class="card">
-          <h1> MRDIČKA ❤️</h1>
+    launchConfetti();
+    vibe(60);
 
-          <p style="line-height:1.6">
-            Tak teď už je to jistý.<br>
-            pusu máš povinnou<br>
-            a jsi ofiko moje Valentýnka 😄
-          </p>
-
-          <p style="line-height:1.6">
-            Miluju tě.<br>
-            Tvůj Mimoušek ❤️
-          </p>
-        </div>
-      </div>
-    `;
+    // přepni view bez ničení JS
+    elMain.style.display = "none";
+    elFinale.style.display = "grid";
   }
 </script>
 
